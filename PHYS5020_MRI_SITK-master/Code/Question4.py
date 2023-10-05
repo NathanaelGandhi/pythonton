@@ -4,12 +4,28 @@ Created on Wed Sep  8 13:30:44 2021
 
 @author: siris
 """
-<<insert required import statements here>>
+import SimpleITK as sitk
+import numpy as np
+import tqdm
 
 
 def get_te(f):
     # 1. Read image in file 'f' and extract echo time (te) from the metadata
+    # Read the DICOM series from the 4D DICOM file
+    reader = sitk.ImageSeriesReader()
+    dicom_series = reader.GetGDCMSeriesFileNames(f)
+    reader.SetFileNames(dicom_series)
+    image = reader.Execute()
+
+    # Access the DICOM tags to extract the Echo Time (TE)
+    dicom_info = image.GetMetaData("0008|0008")  # DICOM Tag for Image Type
+    tags = dicom_info.split("\\")
     
+    # Find the index of the TE tag in the DICOM tags
+    te_index = tags.index("TE")
+    
+    # Extract the TE value
+    te = float(tags[te_index + 1])
     
     
     return te
@@ -21,11 +37,29 @@ def mono_exponential_decay(x, a, b):
     return y
 
 
-def calculate_t2map(files):
+def calculate_t2map(dicom_filepaths):
+
+    ### IM REALLY NOT SURE ABOUT THIS
+
     # 1. Get a list of the echo times (defined as te below) in the 4D image series
+    te = []
+    for slicepath in dicom_filepaths:
+        te.append(get_te(slicepath))
 
     # 2. Read the 4D image series into a 4D Numpy array (defined as s below)
     # HINT: Use a for loop to collect 3D image arrays at each echo time
+    slices = []
+    dicom_image = sitk.ReadImage(dicom_filepaths)
+    # Get the pixel array (image data)
+    pixel_array = sitk.GetArrayFromImage(dicom_image)
+
+    # Handle 4D (volume) image
+    # You may want to specify a specific time frame if necessary
+    # For example, if you want the first time frame: pixel_array[0, slice_num]
+    # Here, slice_num is the slice you want to extract
+    for time_idx in range(np.size(te)):
+        slices.append(pixel_array[time_idx, :])
+
 
     # 3. Perform T2 fitting for each voxel
     dim = np.shape(s)  # HINT: Note the array dimensions are te, z, r, c

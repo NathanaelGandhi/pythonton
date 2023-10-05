@@ -14,13 +14,18 @@ import numpy as np
 import SimpleITK as sitk
 
 
-def get_dicom_series(folder):
+def get_dicom_series(series_folder):
+    """
+    returns a np array
+    """
     # 1. Read the file names of the image series using SimpleITK
     # List all files in the folder
-    file_list = listdir(folder)
+    file_list = listdir(series_folder)
     # Filter files by file extension
     dicom_names = [
-        join(folder, file) for file in listdir(folder) if file.endswith(".dcm")
+        join(series_folder, file)
+        for file in listdir(series_folder)
+        if file.endswith(".dcm")
     ]
 
     if DEBUG_THIS_FILE:
@@ -33,6 +38,12 @@ def get_dicom_series(folder):
         dicom_names = np.array(dicom_names).reshape(4, 11)
     else:
         dicom_names = np.array(dicom_names)
+
+    if DEBUG_THIS_FILE:
+        # Print the list of image file names
+        for file in dicom_names:
+            print(file)
+
     return dicom_names
 
 
